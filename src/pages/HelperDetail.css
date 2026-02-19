@@ -1,0 +1,9 @@
+.map-grid {
+  background-color: #f8f8f8;
+  background-image: radial-gradient(#e5e5e5 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dashed-route {
+  stroke-dasharray: 8, 8;
+}

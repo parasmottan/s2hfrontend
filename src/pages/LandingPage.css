@@ -1,0 +1,15 @@
+.search-shadow {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+.hero-title {
+  letter-spacing: -0.02em;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
