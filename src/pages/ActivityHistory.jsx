@@ -7,12 +7,24 @@ import './ActivityHistory.css'
 export default function ActivityHistory() {
   const { user } = useAuth()
   const [requests, setRequests] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
 
-  // Note: There's no dedicated history endpoint in the backend.
-  // Activity displays are based on locally tracked request data.
-  // In production, you'd add GET /api/requests/history endpoint.
+  // Fetch real request history from API
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setLoading(true)
+        const res = await api.get('/requests/my')
+        setRequests(res.data.data || [])
+      } catch (err) {
+        console.error('Failed to fetch history:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchHistory()
+  }, [])
 
   const getCategoryIcon = (category) => {
     const icons = {
@@ -39,6 +51,7 @@ export default function ActivityHistory() {
 
   const filteredRequests = requests.filter((r) => {
     if (activeTab === 'all') return true
+    if (activeTab === 'active') return ['searching', 'helper_accepted', 'confirmed', 'on_the_way'].includes(r.status)
     if (activeTab === 'completed') return r.status === 'completed'
     if (activeTab === 'cancelled') return r.status === 'cancelled'
     return true
@@ -58,13 +71,14 @@ export default function ActivityHistory() {
         <div className="flex gap-6 overflow-x-auto no-scrollbar">
           {[
             { key: 'all', label: 'All Activity' },
+            { key: 'active', label: 'Active' },
             { key: 'completed', label: 'Completed' },
             { key: 'cancelled', label: 'Cancelled' },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`text-sm font-${activeTab === tab.key ? 'semibold' : 'medium'} border-b-2 ${activeTab === tab.key ? 'border-primary' : 'border-transparent text-gray-400'
+              className={`text-sm ${activeTab === tab.key ? 'font-semibold' : 'font-medium'} border-b-2 ${activeTab === tab.key ? 'border-primary' : 'border-transparent text-gray-400'
                 } pb-2 whitespace-nowrap transition-all`}
             >
               {tab.label}
@@ -73,7 +87,7 @@ export default function ActivityHistory() {
         </div>
       </header>
 
-      <main className="flex-grow px-6 py-6">
+      <main className="flex-grow px-6 py-6 pb-28">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-2 border-gray-200 border-t-[#111111] rounded-full animate-spin"></div>
@@ -89,7 +103,7 @@ export default function ActivityHistory() {
                 ? 'Your completed and past requests will appear here.'
                 : 'Your completed tasks and earnings will show here.'}
             </p>
-            <Link to="/search" className="mt-6">
+            <Link to={user?.role === 'seeker' ? '/search' : '/dashboard'} className="mt-6">
               <button className="bg-[#111111] text-white text-sm font-semibold px-6 py-3 rounded-full">
                 {user?.role === 'seeker' ? 'Find Help' : 'Go to Dashboard'}
               </button>
@@ -109,12 +123,25 @@ export default function ActivityHistory() {
                       <div>
                         <h3 className="font-semibold text-[15px]">{req.category}</h3>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {new Date(req.createdAt).toLocaleDateString()}
+                          {new Date(req.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
                     <span className="text-sm font-semibold">${req.budget}</span>
                   </div>
+                  {/* Show helper/seeker name if available */}
+                  {req.helperId?.name && user?.role === 'seeker' && (
+                    <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">person</span>
+                      Helper: {req.helperId.name}
+                    </p>
+                  )}
+                  {req.seekerId?.name && user?.role === 'helper' && (
+                    <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">person</span>
+                      Seeker: {req.seekerId.name}
+                    </p>
+                  )}
                   <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${badge.bg}`}>
                       {badge.label}
@@ -128,7 +155,11 @@ export default function ActivityHistory() {
         )}
       </main>
 
-      <nav className="sticky bottom-0 bg-white border-t border-gray-100 px-8 py-4 flex justify-between items-center pb-8">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-8 py-4 flex justify-between items-center pb-8 z-50">
+        <Link to="/dashboard" className="flex flex-col items-center gap-1 text-gray-300">
+          <span className="material-symbols-outlined">dashboard</span>
+          <span className="text-[10px] font-medium">Dashboard</span>
+        </Link>
         <Link to="/search" className="flex flex-col items-center gap-1 text-gray-300">
           <span className="material-symbols-outlined">explore</span>
           <span className="text-[10px] font-medium">Search</span>
@@ -137,10 +168,6 @@ export default function ActivityHistory() {
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
           <span className="text-[10px] font-bold">Activity</span>
         </Link>
-        <div className="flex flex-col items-center gap-1 text-gray-300">
-          <span className="material-symbols-outlined">chat_bubble</span>
-          <span className="text-[10px] font-medium">Messages</span>
-        </div>
         <Link to="/profile" className="flex flex-col items-center gap-1 text-gray-300">
           <span className="material-symbols-outlined">person</span>
           <span className="text-[10px] font-medium">Profile</span>

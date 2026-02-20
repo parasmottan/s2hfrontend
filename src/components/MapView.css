@@ -1,0 +1,154 @@
+.map-view-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: #f7f7f7;
+  /* Match app background to avoid flash */
+}
+
+.map-view-instance {
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+/* Custom User Marker */
+.user-marker-container {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  /* Center the marker */
+}
+
+.user-marker-dot {
+  width: 16px;
+  height: 16px;
+  background-color: #007AFF;
+  /* Primary Blue */
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+.user-marker-pulse {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 122, 255, 0.2);
+  border-radius: 50%;
+  z-index: 1;
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes pulse-blue {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* MapLibre Control Overrides */
+.maplibregl-ctrl-bottom-right {
+  bottom: 80px !important;
+  /* Move up to avoid bottom nav/pill */
+  right: 20px !important;
+}
+
+.maplibregl-ctrl-group {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #f0f0f0 !important;
+}
+
+.maplibregl-ctrl-group button {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+/* Permission Warning Toast */
+.location-permission-warning {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 10;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Helper Marker (TrackingMapView) ─── */
+.helper-marker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.helper-marker-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #121212;
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+}
+
+.helper-marker-label {
+  margin-top: 4px;
+  background: #121212;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 3;
+}
+
+.helper-marker-pulse {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(18, 18, 18, 0.15);
+  z-index: 1;
+  animation: helper-pulse 2.5s ease-out infinite;
+}
+
+@keyframes helper-pulse {
+  0% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translateX(-50%) scale(2.5);
+    opacity: 0;
+  }
+}

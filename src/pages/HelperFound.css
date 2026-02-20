@@ -1,3 +1,168 @@
+/* ── Celebration Overlay Animation ─────────────────────────────── */
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #111111;
+  animation: overlay-fade-in 0.3s ease-out;
+}
+
+.celebration-overlay.fade-out {
+  animation: overlay-fade-out 0.6s ease-in forwards;
+}
+
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+/* Checkmark circle */
+.celebration-check {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22C55E, #16A34A);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: check-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  box-shadow: 0 0 60px rgba(34, 197, 94, 0.4);
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Ring bursts behind the check */
+.celebration-ring {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid rgba(34, 197, 94, 0.4);
+  animation: ring-burst 1.2s ease-out forwards;
+}
+
+.celebration-ring:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.celebration-ring:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes ring-burst {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+/* Confetti particles */
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confetti-fall 1.8s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(0);
+    opacity: 1;
+  }
+
+  20% {
+    transform: translateY(-120px) rotate(90deg) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(400px) rotate(720deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.celebration-title {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 32px;
+  animation: text-fade-up 0.5s ease-out 0.5s both;
+}
+
+.celebration-subtitle {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 15px;
+  font-weight: 500;
+  margin-top: 10px;
+  animation: text-fade-up 0.5s ease-out 0.7s both;
+}
+
+.celebration-helper-name {
+  color: #22C55E;
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 8px;
+  animation: text-fade-up 0.5s ease-out 0.9s both;
+}
+
+@keyframes text-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Existing animations ─────────────────────────────────────── */
 .accepted-pulse {
   position: absolute;
   height: 100%;
@@ -32,5 +197,26 @@
 
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* ── ETA Timer ────────────────────────────────────────────────── */
+.eta-timer {
+  font-variant-numeric: tabular-nums;
+}
+
+.eta-pulse {
+  animation: eta-blink 2s ease-in-out infinite;
+}
+
+@keyframes eta-blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
   }
 }

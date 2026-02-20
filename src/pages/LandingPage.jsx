@@ -13,7 +13,7 @@ export default function LandingPage() {
   return (
     <div className="bg-white min-h-screen flex flex-col" style={{ fontFamily: "'Inter', sans-serif", color: '#121212' }}>
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-4 border-b border-gray-100">
+      <nav className="flex items-center justify-between px-4 md:px-8 py-4 border-b border-gray-100">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-[#111111] rounded-lg flex items-center justify-center">
@@ -21,7 +21,7 @@ export default function LandingPage() {
             </div>
             <span className="font-semibold text-lg tracking-tight">Seeker to Helper</span>
           </div>
-          <div className="flex gap-6 text-sm text-gray-500">
+          <div className="hidden md:flex gap-6 text-sm text-gray-500">
             <span className="cursor-pointer hover:text-[#111111] transition-colors">Categories</span>
             <span className="cursor-pointer hover:text-[#111111] transition-colors">How It Works</span>
             <span className="cursor-pointer hover:text-[#111111] transition-colors">Become a Helper</span>
@@ -38,11 +38,11 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <main className="flex-grow flex flex-col items-center justify-center text-center px-6 py-20">
-        <h1 className="hero-title text-7xl font-bold tracking-tighter leading-none mb-6">
+      <main className="flex-grow flex flex-col items-center justify-center text-center px-4 md:px-6 py-12 md:py-20">
+        <h1 className="hero-title text-4xl md:text-7xl font-bold tracking-tighter leading-none mb-4 md:mb-6">
           Get instant help<br />near you.
         </h1>
-        <p className="text-gray-500 text-lg max-w-md mb-10">
+        <p className="text-gray-500 text-base md:text-lg max-w-md mb-8 md:mb-10">
           Find verified local helpers for any task. From cleaning to tech support, get matched in seconds.
         </p>
 
@@ -53,7 +53,7 @@ export default function LandingPage() {
             <input
               type="text"
               placeholder="What do you need help with?"
-              className="flex-grow bg-transparent outline-none text-[15px] py-3 placeholder-gray-400"
+              className="flex-grow bg-transparent outline-none border-none text-[15px] py-3 placeholder-gray-400"
             />
             <Link to="/register">
               <button className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#111111] text-white rounded-full flex items-center justify-center hover:scale-105 transition-transform">
@@ -71,8 +71,8 @@ export default function LandingPage() {
         </div>
 
         {/* Promo Card */}
-        <div className="bg-[#F9F9F9] rounded-3xl overflow-hidden flex max-w-3xl w-full border border-gray-100">
-          <div className="flex-1 p-10 flex flex-col justify-center">
+        <div className="bg-[#F9F9F9] rounded-3xl overflow-hidden flex flex-col md:flex-row max-w-3xl w-full border border-gray-100">
+          <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mb-3">Featured Service</span>
             <h2 className="text-2xl font-bold tracking-tight mb-2">Expert Deep Clean</h2>
             <p className="text-gray-500 text-sm mb-6">Professional home cleaning by verified helpers, starting at $45/hr.</p>
@@ -80,7 +80,7 @@ export default function LandingPage() {
               <button className="bg-[#111111] text-white text-sm font-semibold px-6 py-3 rounded-full w-fit hover:bg-[#333] transition-colors">Book Now</button>
             </Link>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 h-48 md:h-auto">
             <img
               alt="Expert Deep Cleaning Service"
               className="w-full h-full object-cover"
@@ -91,7 +91,7 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 px-8 py-6 flex items-center justify-between">
+      <footer className="border-t border-gray-100 px-4 md:px-8 py-4 md:py-6 flex flex-col md:flex-row items-center justify-between gap-2">
         <span className="text-xs text-gray-400">© 2024 Seeker to Helper</span>
         <div className="flex gap-6 text-xs text-gray-400">
           <span className="cursor-pointer hover:text-[#111111] transition-colors">Privacy</span>

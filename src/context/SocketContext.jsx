@@ -7,6 +7,7 @@ const SocketContext = createContext(null)
 export function SocketProvider({ children }) {
   const { token, isAuthenticated } = useAuth()
   const [isConnected, setIsConnected] = useState(false)
+  const [connectError, setConnectError] = useState(null)
   const socketRef = useRef(null)
   // Track connection readiness so components know when they can emit
   const [ready, setReady] = useState(false)
@@ -16,6 +17,7 @@ export function SocketProvider({ children }) {
       console.log('[SocketCtx] not authenticated, cleaning up')
       setIsConnected(false)
       setReady(false)
+      setConnectError(null)
       if (socketRef.current) {
         disconnectSocket()
         socketRef.current = null
@@ -24,6 +26,8 @@ export function SocketProvider({ children }) {
     }
 
     console.log('[SocketCtx] connecting...')
+    // Reset error on new connection attempt
+    setConnectError(null)
     const sock = connectSocket(token)
     socketRef.current = sock
 
@@ -31,6 +35,7 @@ export function SocketProvider({ children }) {
       console.log('[SocketCtx] ✅ connected, id:', sock.id)
       setIsConnected(true)
       setReady(true)
+      setConnectError(null)
     }
     const onDisconnect = (reason) => {
       console.log('[SocketCtx] ❌ disconnected, reason:', reason)
@@ -41,6 +46,7 @@ export function SocketProvider({ children }) {
       console.log('[SocketCtx] connect_error:', err.message)
       setIsConnected(false)
       setReady(false)
+      setConnectError(err.message)
     }
 
     sock.on('connect', onConnect)
@@ -86,6 +92,7 @@ export function SocketProvider({ children }) {
 
   const value = {
     isConnected,
+    connectError,
     ready,
     emit,
     on,

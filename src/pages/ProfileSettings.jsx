@@ -7,14 +7,29 @@ import api from '../services/api'
 import './ProfileSettings.css'
 
 export default function ProfileSettings() {
-  const { user, logout } = useAuth()
+  const { user, logout, loadUser } = useAuth()
   const { isConnected } = useSocket()
   const toast = useToast()
-  const [activeRole, setActiveRole] = useState(user?.role || 'seeker')
+  const [switching, setSwitching] = useState(false)
 
   const handleLogout = () => {
     logout()
     toast.info('Logged out successfully')
+  }
+
+  const handleSwitchRole = async () => {
+    if (switching) return
+    setSwitching(true)
+    try {
+      const res = await api.patch('/users/role')
+      toast.success(`Switched to ${res.data.data.role} mode!`)
+      // Reload user context to reflect the change everywhere
+      await loadUser()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to switch role')
+    } finally {
+      setSwitching(false)
+    }
   }
 
   return (
@@ -33,7 +48,7 @@ export default function ProfileSettings() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto pt-24 pb-20 px-6">
+      <main className="max-w-3xl mx-auto pt-24 pb-28 px-6">
         {/* Profile Section */}
         <section className="flex flex-col items-center mb-10">
           <div className="relative mb-4">
@@ -46,27 +61,28 @@ export default function ProfileSettings() {
           </div>
           <h2 className="text-2xl font-semibold mb-1">{user?.name || 'User'}</h2>
           <p className="text-gray-500 text-sm mb-6">{user?.email || ''}</p>
+
+          {/* Role Switch */}
           <div className="bg-gray-100 p-1 rounded-full flex w-64">
             <button
-              onClick={() => setActiveRole('seeker')}
-              className={`flex-1 ${activeRole === 'seeker' ? 'bg-white shadow-sm' : ''} rounded-full py-2 text-xs font-semibold tracking-wide uppercase transition-all ${activeRole !== 'seeker' ? 'text-gray-500' : ''
-                }`}
+              onClick={user?.role !== 'seeker' ? handleSwitchRole : undefined}
+              disabled={switching}
+              className={`flex-1 ${user?.role === 'seeker' ? 'bg-white shadow-sm text-[#111111]' : 'text-gray-500'} rounded-full py-2 text-xs font-semibold tracking-wide uppercase transition-all disabled:opacity-50`}
             >
               Seeker
             </button>
             <button
-              onClick={() => setActiveRole('helper')}
-              className={`flex-1 ${activeRole === 'helper' ? 'bg-white shadow-sm' : ''} rounded-full py-2 text-xs font-semibold tracking-wide uppercase transition-all ${activeRole !== 'helper' ? 'text-gray-500' : ''
-                }`}
+              onClick={user?.role !== 'helper' ? handleSwitchRole : undefined}
+              disabled={switching}
+              className={`flex-1 ${user?.role === 'helper' ? 'bg-white shadow-sm text-[#111111]' : 'text-gray-500'} rounded-full py-2 text-xs font-semibold tracking-wide uppercase transition-all disabled:opacity-50`}
             >
               Helper
             </button>
           </div>
-          {user?.role && (
-            <p className="text-xs text-gray-400 mt-3">
-              Your role: <span className="font-semibold text-gray-600 capitalize">{user.role}</span>
-            </p>
-          )}
+          <p className="text-xs text-gray-400 mt-3">
+            Current role: <span className="font-semibold text-gray-600 capitalize">{user?.role || 'seeker'}</span>
+            {switching && <span className="ml-2 text-blue-500">Switching...</span>}
+          </p>
         </section>
 
         <div className="space-y-10">
@@ -171,17 +187,21 @@ export default function ProfileSettings() {
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-8 pb-8 pt-3 flex justify-between items-center z-50">
-        <Link to="/search" className="flex flex-col items-center gap-1 text-gray-400">
-          <span className="material-symbols-outlined">explore</span>
-          <span className="text-[10px] font-medium">Search</span>
-        </Link>
         <Link to="/dashboard" className="flex flex-col items-center gap-1 text-gray-400">
           <span className="material-symbols-outlined">dashboard</span>
           <span className="text-[10px] font-medium">Dashboard</span>
         </Link>
+        <Link to="/search" className="flex flex-col items-center gap-1 text-gray-400">
+          <span className="material-symbols-outlined">explore</span>
+          <span className="text-[10px] font-medium">Search</span>
+        </Link>
+        <Link to="/history" className="flex flex-col items-center gap-1 text-gray-400">
+          <span className="material-symbols-outlined">receipt_long</span>
+          <span className="text-[10px] font-medium">Activity</span>
+        </Link>
         <Link to="/profile" className="flex flex-col items-center gap-1 text-[#111111]">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
-          <span className="text-[10px] font-medium">Profile</span>
+          <span className="text-[10px] font-bold">Profile</span>
         </Link>
       </nav>
     </div>

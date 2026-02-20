@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
@@ -12,6 +12,29 @@ export default function HelperDashboard() {
   const toast = useToast()
   const [isOnline, setIsOnline] = useState(false)
   const [incomingRequests, setIncomingRequests] = useState([])
+  const hasAutoOnlined = useRef(false)
+
+  // Auto go-online for helpers when connected
+  useEffect(() => {
+    if (user?.role !== 'helper' || !isConnected || hasAutoOnlined.current) return
+
+    hasAutoOnlined.current = true
+
+    const goOnline = (lng, lat) => {
+      emit(EVENTS.GO_ONLINE, { longitude: lng, latitude: lat })
+      setIsOnline(true)
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => goOnline(pos.coords.longitude, pos.coords.latitude),
+        () => goOnline(77.5946, 12.9716),
+        { timeout: 3000 }
+      )
+    } else {
+      goOnline(77.5946, 12.9716)
+    }
+  }, [user, isConnected, emit])
 
   // Listen for new requests (helper role)
   useEffect(() => {
@@ -123,7 +146,7 @@ export default function HelperDashboard() {
         </div>
       </header>
 
-      <main className="flex-grow px-6 py-6 space-y-8">
+      <main className="flex-grow px-6 py-6 space-y-8 pb-28">
         {/* Earnings Card */}
         <section className="bg-[#111111] text-white rounded-3xl p-7 relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5"></div>
@@ -221,7 +244,7 @@ export default function HelperDashboard() {
       </main>
 
       {/* Bottom Nav */}
-      <nav className="sticky bottom-0 bg-white border-t border-gray-100 px-8 py-4 flex justify-between items-center pb-8">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-8 py-4 flex justify-between items-center pb-8 z-50">
         <Link to="/dashboard" className="flex flex-col items-center gap-1 text-[#111111]">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
           <span className="text-[10px] font-bold">Dashboard</span>
