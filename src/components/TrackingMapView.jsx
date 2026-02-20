@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import './MapView.css'
+import { calculateBearing } from '../utils/locationUtils'
 
 /**
  * TrackingMapView — shows a real map with:
@@ -13,8 +14,9 @@ import './MapView.css'
  *  @param {[number,number]|{lng,lat}|null} helperLocation — helper coords
  *  @param {[number,number]|null} seekerLocation — override; if null, uses browser geolocation
  *  @param {function} onRouteInfo — callback({duration, distance}) called each time route is fetched
+ *  @param {boolean} navigationMode — if true, camera tilts and follows helper POV
  */
-export default function TrackingMapView({ helperLocation: helperLocationProp, seekerLocation: seekerLocationProp, onRouteInfo }) {
+export default function TrackingMapView({ helperLocation: helperLocationProp, seekerLocation: seekerLocationProp, onRouteInfo, navigationMode }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
   const seekerMarkerRef = useRef(null)
@@ -38,6 +40,8 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
   const lastRouteFetch = useRef(0)
   const animationRef = useRef(null)
   const [helperMarkerPos, setHelperMarkerPos] = useState(null)
+  const prevHelperLoc = useRef(null)
+  const [currentBearing, setCurrentBearing] = useState(0)
 
   // ─── Initialize map ───────────────────────────────────────────
   useEffect(() => {
@@ -107,9 +111,18 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
     return () => navigator.geolocation.clearWatch(watcher)
   }, [seekerLocationProp])
 
-  // ─── Smooth Marker Animation ──────────────────────────────────
+  // ─── Smooth Marker Animation + POV Follow ─────────────────────
   useEffect(() => {
     if (!helperLocation) return
+
+    // Update bearing if we have a previous location
+    if (prevHelperLoc.current) {
+      const bearing = calculateBearing(prevHelperLoc.current, helperLocation)
+      if (bearing !== 0) {
+        setCurrentBearing(bearing)
+      }
+    }
+    prevHelperLoc.current = helperLocation
 
     if (!helperMarkerPos) {
       // Direct jump for the first location
@@ -135,6 +148,16 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
 
       setHelperMarkerPos([currentLng, currentLat])
 
+      // ─── POV Camera Follow ───
+      if (navigationMode && map.current) {
+        map.current.jumpTo({
+          center: [currentLng, currentLat],
+          zoom: 17.5,
+          pitch: 60,
+          bearing: currentBearing
+        })
+      }
+
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate)
       }
@@ -145,7 +168,7 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
-  }, [helperLocation])
+  }, [helperLocation, navigationMode, currentBearing])
 
   // ─── Seeker marker ────────────────────────────────────────────
   useEffect(() => {

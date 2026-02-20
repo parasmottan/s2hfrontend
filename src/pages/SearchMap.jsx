@@ -65,22 +65,31 @@ export default function SearchMap() {
     setSearching(true)
     searchingRef.current = true
 
+    // Tracking if already emitted to prevent race between success and fallback
+    let alreadyEmitted = false
+
     // Default fallback coords (Bangalore)
     const fallbackLng = 77.5946
     const fallbackLat = 12.9716
 
     if (navigator.geolocation) {
       const fallbackTimer = setTimeout(() => {
+        if (alreadyEmitted) return
+        alreadyEmitted = true
         console.log('[SearchMap] geolocation timed out, using fallback')
         doEmitSearch(fallbackLng, fallbackLat)
       }, 3000)
 
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          if (alreadyEmitted) return
+          alreadyEmitted = true
           clearTimeout(fallbackTimer)
           doEmitSearch(pos.coords.longitude, pos.coords.latitude)
         },
         () => {
+          if (alreadyEmitted) return
+          alreadyEmitted = true
           clearTimeout(fallbackTimer)
           doEmitSearch(fallbackLng, fallbackLat)
         },

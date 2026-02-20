@@ -28,6 +28,11 @@ export default function HelperNavigation() {
   const [currentLocation, setCurrentLocation] = useState(null)
   const [etaText, setEtaText] = useState('—')
   const [distanceText, setDistanceText] = useState('—')
+  const [navigationMode, setNavigationMode] = useState(() => {
+    return sessionStorage.getItem('sh_nav_mode') === 'true'
+  })
+  const [isArrived, setIsArrived] = useState(false)
+  const [seekerFirstName, setSeekerFirstName] = useState('Seeker')
 
   // Reject modal
   const [showRejectModal, setShowRejectModal] = useState(false)
@@ -48,6 +53,7 @@ export default function HelperNavigation() {
         setSeekerLocation(coords)
       }
       setSeekerAddress(parsed.seekerAddress || parsed.address || 'Seeker location')
+      setSeekerFirstName(parsed.seekerName?.split(' ')[0] || 'Seeker')
     }
 
     const storedUser = sessionStorage.getItem('sh_user')
@@ -147,33 +153,55 @@ export default function HelperNavigation() {
         <TrackingMapView
           helperLocation={currentLocation}
           seekerLocation={seekerLocation}
+          navigationMode={navigationMode}
           onRouteInfo={(info) => {
             setEtaText(info.etaText)
             setDistanceText(info.distanceText)
+
+            // Arrival check: < 50 meters
+            if (info.distance < 50 && !isArrived) {
+              setIsArrived(true)
+              setNavigationMode(false)
+              sessionStorage.removeItem('sh_nav_mode')
+            }
           }}
         />
       </div>
 
-      {/* Header */}
-      <header style={{ position: 'relative', zIndex: 30, padding: '48px 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <button
-          onClick={() => navigate('/dashboard')}
-          style={{ width: 44, height: 44, borderRadius: '50%', background: '#fff', border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-        >
-          <span className="material-symbols-outlined" style={{ color: '#121212' }}>arrow_back_ios_new</span>
-        </button>
+      {/* Header (Hidden in Navigation Mode) */}
+      {!navigationMode && !isArrived && (
+        <header style={{ position: 'relative', zIndex: 30, padding: '48px 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{ width: 44, height: 44, borderRadius: '50%', background: '#fff', border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            <span className="material-symbols-outlined" style={{ color: '#121212' }}>arrow_back_ios_new</span>
+          </button>
 
-        {/* Helper badge */}
-        <div className="helper-id-badge">
-          <div className="badge-avatar">
-            <span className="material-symbols-outlined" style={{ color: '#6366F1', fontSize: 16 }}>person</span>
+          <div className="helper-id-badge">
+            <div className="badge-avatar">
+              <span className="material-symbols-outlined" style={{ color: '#6366F1', fontSize: 16 }}>person</span>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#121212' }}>{helperName}</span>
+            <span style={{ fontSize: 11, fontWeight: 500, color: '#9CA3AF' }}>Helper</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#121212' }}>{helperName}</span>
-          <span style={{ fontSize: 11, fontWeight: 500, color: '#9CA3AF' }}>Helper</span>
-        </div>
 
-        <div style={{ width: 44 }}></div>
-      </header>
+          <div style={{ width: 44 }}></div>
+        </header>
+      )}
+
+      {/* Floating ETA Card (Navigation Mode Only) */}
+      {navigationMode && (
+        <div className="nav-floating-eta">
+          <div className="eta-main">
+            <span className="material-symbols-outlined spinning">navigation</span>
+            <span>{etaText}</span>
+          </div>
+          <div className="eta-sub">
+            To: {seekerFirstName} • {distanceText}
+          </div>
+        </div>
+      )}
 
       {/* Spacer */}
       <div style={{ flex: 1 }}></div>
@@ -181,72 +209,103 @@ export default function HelperNavigation() {
       {/* Gradient overlay */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 200, background: 'linear-gradient(to top, rgba(247,247,247,0.9), transparent)', zIndex: 10, pointerEvents: 'none' }}></div>
 
-      {/* Bottom Panel */}
-      <div className="nav-bottom-panel">
-        <div className="drag-handle"></div>
+      {/* Bottom Panel / Mini Sheet */}
+      {!isArrived && (
+        <div className={`nav-bottom-panel ${navigationMode ? 'mini-sheet' : ''}`}>
+          <div className="drag-handle"></div>
 
-        {/* Current Location */}
-        <div className="nav-location-row">
-          <div className="loc-dot current"></div>
-          <div>
-            <div className="loc-label">Current Location</div>
-            <div className="loc-address">Your location</div>
-          </div>
+          {!navigationMode ? (
+            <>
+              {/* Default Full Panel */}
+              <div className="nav-location-row">
+                <div className="loc-dot current"></div>
+                <div>
+                  <div className="loc-label">Current Location</div>
+                  <div className="loc-address">Your location</div>
+                </div>
+              </div>
+              <div className="nav-location-connector"></div>
+              <div className="nav-location-row">
+                <div className="loc-dot pickup"></div>
+                <div>
+                  <div className="loc-label">Pickup Address</div>
+                  <div className="loc-address">{seekerAddress}</div>
+                </div>
+              </div>
+
+              <div className="nav-location-row" style={{ marginTop: 8, background: '#F9FAFB', borderRadius: 12, padding: '10px 14px' }}>
+                <div style={{ display: 'flex', gap: 20 }}>
+                  <div>
+                    <div className="loc-label" style={{ fontSize: 10 }}>ETA</div>
+                    <div className="loc-address" style={{ fontSize: 15, color: '#6366F1' }}>{etaText.replace('Arriving in ', '')}</div>
+                  </div>
+                  <div style={{ width: 1, height: 24, background: '#E5E7EB', alignSelf: 'center' }}></div>
+                  <div>
+                    <div className="loc-label" style={{ fontSize: 10 }}>Distance</div>
+                    <div className="loc-address" style={{ fontSize: 15 }}>{distanceText}</div>
+                  </div>
+                </div>
+              </div>
+
+              {cancelRemaining !== null && (
+                <div className={`rejection-banner ${cancelRemaining === 0 ? 'expired' : ''}`}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                    {cancelRemaining > 0 ? 'timer' : 'lock'}
+                  </span>
+                  {cancelRemaining > 0
+                    ? `Rejection window active for ${formatTime(cancelRemaining)}`
+                    : 'Rejection window has expired'}
+                </div>
+              )}
+
+              <button className="btn-start-nav" onClick={() => {
+                setNavigationMode(true)
+                sessionStorage.setItem('sh_nav_mode', 'true')
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>navigation</span>
+                Start Navigation
+              </button>
+
+              <button className="btn-reject" onClick={() => setShowRejectModal(true)} disabled={!canReject}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                {canReject ? 'Reject Request' : 'Rejection Locked'}
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Mini Sheet Content */}
+              <div className="mini-sheet-content">
+                <div style={{ flex: 1 }}>
+                  <div className="mini-label">Navigating to Seeker</div>
+                  <div className="mini-address">{seekerAddress}</div>
+                </div>
+                <button className="btn-exit-nav" onClick={() => {
+                  setNavigationMode(false)
+                  sessionStorage.setItem('sh_nav_mode', 'false')
+                }}>
+                  Exit
+                </button>
+              </div>
+            </>
+          )}
         </div>
+      )}
 
-        <div className="nav-location-connector"></div>
-
-        {/* Pickup Address */}
-        <div className="nav-location-row">
-          <div className="loc-dot pickup"></div>
-          <div>
-            <div className="loc-label">Pickup Address</div>
-            <div className="loc-address">{seekerAddress}</div>
-          </div>
-        </div>
-
-        {/* Path Stats (ETA/Distance) */}
-        <div className="nav-location-row" style={{ marginTop: 8, background: '#F9FAFB', borderRadius: 12, padding: '10px 14px' }}>
-          <div style={{ display: 'flex', gap: 20 }}>
-            <div>
-              <div className="loc-label" style={{ fontSize: 10 }}>ETA</div>
-              <div className="loc-address" style={{ fontSize: 15, color: '#6366F1' }}>{etaText.replace('Arriving in ', '')}</div>
+      {/* Arrival Overlay */}
+      {isArrived && (
+        <div className="arrival-overlay">
+          <div className="arrival-card">
+            <div className="arrival-icon">
+              <span className="material-symbols-outlined">check_circle</span>
             </div>
-            <div style={{ width: 1, height: 24, background: '#E5E7EB', alignSelf: 'center' }}></div>
-            <div>
-              <div className="loc-label" style={{ fontSize: 10 }}>Distance</div>
-              <div className="loc-address" style={{ fontSize: 15 }}>{distanceText}</div>
-            </div>
+            <h2>You've Arrived</h2>
+            <p>{seekerFirstName} is waiting for you at the location.</p>
+            <button className="btn-complete-nav" onClick={() => navigate('/dashboard')}>
+              Back to Dashboard
+            </button>
           </div>
         </div>
-
-        {/* Rejection window banner */}
-        {cancelRemaining !== null && (
-          <div className={`rejection-banner ${cancelRemaining === 0 ? 'expired' : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
-              {cancelRemaining > 0 ? 'timer' : 'lock'}
-            </span>
-            {cancelRemaining > 0
-              ? `Rejection window active for ${formatTime(cancelRemaining)}`
-              : 'Rejection window has expired'}
-          </div>
-        )}
-
-        {/* Display ETA / Distance in panel if needed, but per request we mainly use it in seeker side UI. 
-            However, we can add it here too for the helper's convenience. */}
-
-        {/* Start Navigation button */}
-        <button className="btn-start-nav">
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>navigation</span>
-          Start Navigation
-        </button>
-
-        {/* Reject button */}
-        <button className="btn-reject" onClick={() => setShowRejectModal(true)} disabled={!canReject}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
-          {canReject ? 'Reject Request' : 'Rejection Locked'}
-        </button>
-      </div>
+      )}
 
       {/* Reject Modal */}
       {showRejectModal && (

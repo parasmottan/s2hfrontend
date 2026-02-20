@@ -40,15 +40,20 @@ export default function HelperDashboard() {
   useEffect(() => {
     if (user?.role !== 'helper') return
 
-    const cleanup = on(EVENTS.NEW_REQUEST, (data) => {
+    const handleNewRequest = (data) => {
+      console.log(`[HelperDashboard] Received new_request:`, data.requestId)
       setIncomingRequests((prev) => {
-        // Avoid duplicates
-        if (prev.find((r) => r.requestId === data.requestId)) return prev
+        // Avoid duplicates in UI state
+        if (prev.find((r) => r.requestId === data.requestId)) {
+          console.warn(`[HelperDashboard] Duplicate request ignored: ${data.requestId}`)
+          return prev
+        }
         return [data, ...prev]
       })
       toast.info(`New request: ${data.category} — $${data.budget}`)
-    })
+    }
 
+    const cleanup = on(EVENTS.NEW_REQUEST, handleNewRequest)
     return cleanup
   }, [user, on, toast, isConnected])
 
