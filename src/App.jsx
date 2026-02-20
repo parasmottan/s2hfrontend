@@ -15,6 +15,9 @@ import ActivityHistory from './pages/ActivityHistory'
 import HelperDetail from './pages/HelperDetail'
 import SearchMap from './pages/SearchMap'
 import ProfileSettings from './pages/ProfileSettings'
+import SeekerTracking from './pages/SeekerTracking'
+import HelperNavigation from './pages/HelperNavigation'
+import CancelledState from './pages/CancelledState'
 
 function AppRoutes() {
   return (
@@ -32,6 +35,11 @@ function AppRoutes() {
         <Route path="/helper-found" element={<ProtectedRoute><HelperFound /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><ActivityHistory /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+
+        {/* Post-confirmation flow */}
+        <Route path="/tracking/:requestId" element={<ProtectedRoute><SeekerTracking /></ProtectedRoute>} />
+        <Route path="/navigation/:requestId" element={<ProtectedRoute><HelperNavigation /></ProtectedRoute>} />
+        <Route path="/cancelled/:requestId" element={<ProtectedRoute><CancelledState /></ProtectedRoute>} />
       </Routes>
       <ConnectionIndicator />
     </>

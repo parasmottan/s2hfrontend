@@ -26,6 +26,9 @@ export const EVENTS = {
   HELPER_ON_THE_WAY: 'helper_on_the_way',
   SEARCH_STARTED: 'search_started',
   REQUEST_CANCELLED: 'request_cancelled',
+  CONFIRM_REDIRECT: 'confirm_redirect',
+  CANCEL_WINDOW_EXPIRED: 'cancel_window_expired',
+  SYNC_STATE: 'sync_state',
 
   // Generic
   ERROR: 'error',

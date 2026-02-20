@@ -34,6 +34,11 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
         : null
     : null
 
+  // References for animation and throttling
+  const lastRouteFetch = useRef(0)
+  const animationRef = useRef(null)
+  const [helperMarkerPos, setHelperMarkerPos] = useState(null)
+
   // ─── Initialize map ───────────────────────────────────────────
   useEffect(() => {
     if (map.current) return
@@ -43,24 +48,22 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
       style: {
         version: 8,
         sources: {
-          'carto-light': {
+          'osm-tiles': {
             type: 'raster',
             tiles: [
-              'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-              'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-              'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+              'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
             ],
             tileSize: 256,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           }
         },
         layers: [
           {
-            id: 'carto-light-layer',
+            id: 'osm-layer',
             type: 'raster',
-            source: 'carto-light',
+            source: 'osm-tiles',
             minzoom: 0,
-            maxzoom: 20
+            maxzoom: 19
           }
         ]
       },
@@ -90,7 +93,6 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
       return
     }
 
-    // Get initial position
     navigator.geolocation.getCurrentPosition(
       (pos) => setSeekerLocation([pos.coords.longitude, pos.coords.latitude]),
       () => setSeekerLocation(DEFAULT_CENTER),
@@ -105,6 +107,46 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
     return () => navigator.geolocation.clearWatch(watcher)
   }, [seekerLocationProp])
 
+  // ─── Smooth Marker Animation ──────────────────────────────────
+  useEffect(() => {
+    if (!helperLocation) return
+
+    if (!helperMarkerPos) {
+      // Direct jump for the first location
+      setHelperMarkerPos(helperLocation)
+      return
+    }
+
+    // Cancel existing animation
+    if (animationRef.current) cancelAnimationFrame(animationRef.current)
+
+    const startPos = helperMarkerPos
+    const endPos = helperLocation
+    const startTime = performance.now()
+    const DURATION = 800 // 800ms animation
+
+    const animate = (now) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / DURATION, 1)
+
+      // Simple linear interpolation
+      const currentLng = startPos[0] + (endPos[0] - startPos[0]) * progress
+      const currentLat = startPos[1] + (endPos[1] - startPos[1]) * progress
+
+      setHelperMarkerPos([currentLng, currentLat])
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate)
+      }
+    }
+
+    animationRef.current = requestAnimationFrame(animate)
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current)
+    }
+  }, [helperLocation])
+
   // ─── Seeker marker ────────────────────────────────────────────
   useEffect(() => {
     if (!map.current || !seekerLocation) return
@@ -112,14 +154,7 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
     if (!seekerMarkerRef.current) {
       const el = document.createElement('div')
       el.className = 'user-marker-container'
-
-      const pulse = document.createElement('div')
-      pulse.className = 'user-marker-pulse'
-      const dot = document.createElement('div')
-      dot.className = 'user-marker-dot'
-
-      el.appendChild(pulse)
-      el.appendChild(dot)
+      el.innerHTML = '<div class="user-marker-pulse"></div><div class="user-marker-dot"></div>'
 
       seekerMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat(seekerLocation)
@@ -129,9 +164,9 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
     }
   }, [seekerLocation])
 
-  // ─── Helper marker ────────────────────────────────────────────
+  // ─── Helper marker (using animated position) ──────────────────
   useEffect(() => {
-    if (!map.current || !helperLocation) return
+    if (!map.current || !helperMarkerPos) return
 
     if (!helperMarkerRef.current) {
       const el = document.createElement('div')
@@ -144,12 +179,12 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
         <div class="helper-marker-label">EN ROUTE</div>
       `
       helperMarkerRef.current = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat(helperLocation)
+        .setLngLat(helperMarkerPos)
         .addTo(map.current)
     } else {
-      helperMarkerRef.current.setLngLat(helperLocation)
+      helperMarkerRef.current.setLngLat(helperMarkerPos)
     }
-  }, [helperLocation])
+  }, [helperMarkerPos])
 
   // ─── Fit bounds to show both markers ──────────────────────────
   useEffect(() => {
@@ -168,96 +203,64 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
   useEffect(() => {
     if (!map.current || !seekerLocation || !helperLocation) return
 
+    const now = Date.now()
+    const ROUTE_THROTTLE = 10000 // 10 seconds
+
+    // Always attempt initial route, then throttle
+    if (lastRouteFetch.current !== 0 && now - lastRouteFetch.current < ROUTE_THROTTLE) {
+      return
+    }
+
     const drawRoute = async () => {
       try {
+        lastRouteFetch.current = Date.now()
         const url = `https://router.project-osrm.org/route/v1/driving/${helperLocation[0]},${helperLocation[1]};${seekerLocation[0]},${seekerLocation[1]}?overview=full&geometries=geojson`
         const res = await fetch(url)
         const data = await res.json()
 
-        if (data.code !== 'Ok' || !data.routes?.length) {
-          console.warn('[TrackingMap] OSRM returned no route')
-          return
-        }
+        if (data.code !== 'Ok' || !data.routes?.length) return
 
         const route = data.routes[0]
         const routeGeoJSON = route.geometry
 
-        // Report ETA and distance to parent
+        // Report ETA and distance to parent (formatted)
         if (onRouteInfo) {
           onRouteInfo({
-            duration: Math.round(route.duration), // seconds
-            distance: Math.round(route.distance),  // meters
+            duration: route.duration, // raw for internal state if needed
+            distance: route.distance, // raw for internal state if needed
+            etaText: `Arriving in ${Math.round(route.duration / 60)} minutes`,
+            distanceText: `${(route.distance / 1000).toFixed(2)} km`
           })
         }
 
-        // Wait for map style to load
         const addRoute = () => {
-          if (map.current.getSource('route')) {
-            map.current.getSource('route').setData({
-              type: 'Feature',
-              geometry: routeGeoJSON
+          if (!map.current) return
+          let source = map.current.getSource('route')
+          if (source) {
+            source.setData({ type: 'Feature', geometry: routeGeoJSON })
+          } else {
+            map.current.addSource('route', {
+              type: 'geojson',
+              data: { type: 'Feature', geometry: routeGeoJSON }
             })
-            return
+            map.current.addLayer({
+              id: 'route-shadow', type: 'line', source: 'route',
+              paint: { 'line-color': '#00000015', 'line-width': 10, 'line-blur': 4 }
+            })
+            map.current.addLayer({
+              id: 'route-line', type: 'line', source: 'route',
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: { 'line-color': '#6366F1', 'line-width': 5 }
+            })
+            map.current.addLayer({
+              id: 'route-dash', type: 'line', source: 'route',
+              paint: { 'line-color': '#ffffff', 'line-width': 2, 'line-dasharray': [1, 2] }
+            })
           }
-
-          map.current.addSource('route', {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: routeGeoJSON
-            }
-          })
-
-          // Route shadow
-          map.current.addLayer({
-            id: 'route-shadow',
-            type: 'line',
-            source: 'route',
-            paint: {
-              'line-color': '#00000015',
-              'line-width': 10,
-              'line-blur': 4
-            }
-          })
-
-          // Main route
-          map.current.addLayer({
-            id: 'route-line',
-            type: 'line',
-            source: 'route',
-            layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: {
-              'line-color': '#111111',
-              'line-width': 4
-            }
-          })
-
-          // Dashed overlay
-          map.current.addLayer({
-            id: 'route-dash',
-            type: 'line',
-            source: 'route',
-            paint: {
-              'line-color': '#ffffff',
-              'line-width': 1.5,
-              'line-dasharray': [2, 4]
-            }
-          })
         }
 
-        if (map.current.isStyleLoaded()) {
-          addRoute()
-        } else {
-          map.current.on('load', addRoute)
-        }
-
-        // Re-fit bounds along route on first load
-        if (!hasFitBounds.current) {
-          const bounds = new maplibregl.LngLatBounds()
-          routeGeoJSON.coordinates.forEach((c) => bounds.extend(c))
-          map.current.fitBounds(bounds, { padding: 80, maxZoom: 16 })
-          hasFitBounds.current = true
-        }
+        if (map.current.isStyleLoaded()) addRoute()
+        else map.current.once('styledata', addRoute)
 
       } catch (err) {
         console.error('[TrackingMap] Route fetch error:', err)
@@ -273,3 +276,4 @@ export default function TrackingMapView({ helperLocation: helperLocationProp, se
     </div>
   )
 }
+

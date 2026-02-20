@@ -1,0 +1,156 @@
+/* ── Cancelled State Page ──────────────────────────────────────── */
+
+.cancelled-page {
+  font-family: 'Inter', sans-serif;
+  background: #F9FAFB;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+}
+
+/* Icon container */
+.cancelled-icon-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #FEF2F2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  animation: cancelled-pop 0.5s ease;
+}
+
+@keyframes cancelled-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.cancelled-icon-wrap .icon-inner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #DC2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Title */
+.cancelled-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #121212;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+/* Subtitle / reason */
+.cancelled-reason {
+  font-size: 14px;
+  color: #6B7280;
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.6;
+  margin: 0 0 32px;
+}
+
+/* Info card */
+.cancelled-info-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+}
+
+.cancelled-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.cancelled-info-row .info-label {
+  font-size: 13px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.cancelled-info-row .info-value {
+  font-size: 13px;
+  color: #121212;
+  font-weight: 700;
+}
+
+.cancelled-info-divider {
+  height: 1px;
+  background: #F3F4F6;
+  margin: 4px 0;
+}
+
+/* Actions */
+.cancelled-actions {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cancelled-actions .btn-dashboard {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 16px;
+  background: #121212;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.cancelled-actions .btn-dashboard:active {
+  transform: scale(0.98);
+}
+
+.cancelled-actions .btn-history {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  background: #F3F4F6;
+  color: #374151;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.cancelled-actions .btn-history:active {
+  transform: scale(0.98);
+}

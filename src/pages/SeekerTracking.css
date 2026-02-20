@@ -1,0 +1,233 @@
+/* ── Seeker Tracking Page ──────────────────────────────────────── */
+
+.tracking-page {
+  font-family: 'Inter', sans-serif;
+  background: #f7f7f7;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Cancel timer badge */
+.cancel-timer-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cancel-timer-badge .timer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22C55E;
+  animation: timer-pulse 1.5s ease-in-out infinite;
+}
+
+.cancel-timer-badge.expiring .timer-dot {
+  background: #EF4444;
+}
+
+.cancel-timer-badge.expired .timer-dot {
+  background: #9CA3AF;
+  animation: none;
+}
+
+@keyframes timer-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+/* Bottom panel slide-up */
+.tracking-bottom-panel {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 30;
+}
+
+.tracking-bottom-panel .drag-handle {
+  width: 36px;
+  height: 4px;
+  background: #E5E7EB;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+/* Helper card */
+.helper-arrival-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.helper-arrival-card .helper-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.helper-arrival-card .online-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: #22C55E;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* Stats row */
+.tracking-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.tracking-stats .stat-box {
+  background: #F9FAFB;
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.tracking-stats .stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+
+.tracking-stats .stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #121212;
+}
+
+.tracking-stats .stat-unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  margin-left: 2px;
+}
+
+/* Progress bar */
+.tracking-progress {
+  height: 5px;
+  background: #F3F4F6;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 12px 0 8px;
+}
+
+.tracking-progress .fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22C55E, #4ADE80);
+  border-radius: 999px;
+  transition: width 1s ease;
+}
+
+/* Action buttons */
+.tracking-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.tracking-actions .btn-cancel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  border: 1px solid #FEE2E2;
+  background: #FEF2F2;
+  color: #DC2626;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tracking-actions .btn-cancel:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #F9FAFB;
+  color: #9CA3AF;
+  border-color: #E5E7EB;
+}
+
+.tracking-actions .btn-cancel:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.tracking-actions .btn-message {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  background: #121212;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tracking-actions .btn-message:active {
+  transform: scale(0.98);
+}
+
+/* Cancel window banner */
+.cancel-window-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: #FEF3C7;
+  border-radius: 10px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400E;
+}
+
+.cancel-window-banner.expired {
+  background: #F3F4F6;
+  color: #6B7280;
+}

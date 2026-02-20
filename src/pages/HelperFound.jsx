@@ -153,6 +153,17 @@ export default function HelperFound() {
     return cleanup
   }, [on, toast, navigate, isConnected])
 
+  // Listen for confirm redirect (seeker confirmed → go to tracking page)
+  useEffect(() => {
+    const cleanup = on(EVENTS.CONFIRM_REDIRECT, (data) => {
+      if (data.cancelWindowExpiresAt) {
+        sessionStorage.setItem('sh_cancel_window_end', data.cancelWindowExpiresAt)
+      }
+      navigate(`/tracking/${data.requestId}`)
+    })
+    return cleanup
+  }, [on, navigate, isConnected])
+
   // ── Route info callback from TrackingMapView ───────────────────
   const handleRouteInfo = useCallback(({ duration, distance }) => {
     setEtaSeconds(duration)

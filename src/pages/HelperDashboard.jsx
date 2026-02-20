@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import { useToast } from '../hooks/useToast'
@@ -72,6 +72,23 @@ export default function HelperDashboard() {
     })
     return cleanup
   }, [on, toast, isConnected])
+
+  // Listen for confirm_redirect (seeker confirmed → navigate to helper navigation)
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (user?.role !== 'helper') return
+
+    const cleanup = on(EVENTS.CONFIRM_REDIRECT, (data) => {
+      if (data.cancelWindowExpiresAt) {
+        sessionStorage.setItem('sh_cancel_window_end', data.cancelWindowExpiresAt)
+      }
+      // Store request info for the navigation page
+      sessionStorage.setItem('sh_active_request', JSON.stringify(data))
+      navigate(`/navigation/${data.requestId}`)
+    })
+
+    return cleanup
+  }, [user, on, navigate, isConnected])
 
   const toggleOnline = () => {
     if (!isOnline) {
