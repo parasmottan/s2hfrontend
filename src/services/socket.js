@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client'
 
-const SOCKET_URL = 'https://s2hbackend.zeabur.app/'
+const SOCKET_URL = 'https://s2hbackend.zeabur.app'
 
 let socket = null
 
